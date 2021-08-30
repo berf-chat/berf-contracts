@@ -18,5 +18,8 @@
   "homepage": "https://github.com/berf-chat/berf-contracts#readme",
   "devDependencies": {
     "hardhat": "^2.6.1"
+  },
+  "dependencies": {
+    "eth-crypto": "^2.0.0"
   }
 }
