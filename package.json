@@ -25,6 +25,7 @@
     "hardhat": "^2.6.1"
   },
   "dependencies": {
+    "bignumber.js": "^9.0.1",
     "eth-crypto": "^2.0.0"
   }
 }
