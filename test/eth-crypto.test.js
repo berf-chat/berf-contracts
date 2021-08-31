@@ -1,64 +1,52 @@
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
 const EthCrypto = require('eth-crypto');
 const { intToBuffer } = require('ethjs-util');
-// const BigNumber = require('bignumber.js');
 
-describe("eth-crypto functionality", function() {
-    before(async function() {
-        // Get EthCryptoTutorial code to deploy
-        const ethCryptoTutorial = await ethers.getContractFactory("EthCryptoTutorial");
-
-        /*
-        // Create two identities from eth-crypto
-        const creatorIdentity = EthCrypto.createIdentity();
-        const recieverIdentity = EthCrypto.createIdentity();
-        */
-
-        // Pull accounts generated from Hardhat
-        [creatorIdentity, receiverIdentity] = await ethers.getSigners();
-
-        // Deploy ethCryptoTutorial from creatorIdentity
-        EthCryptoTutorial = await ethCryptoTutorial.deploy();
-    })
-
+describe("eth-crypto DeChat app functionality", function() {
     it("should verify the deployer address of the contract", async function() {
-        expect(await EthCryptoTutorial.deployTransaction.from).to.equal(creatorIdentity.address);
+
+        // Create two identities from eth-crypto
+        const alice = EthCrypto.createIdentity();
+        const bob = EthCrypto.createIdentity();
+
+        // Create message that will be sent
+        const secretMessage = "My name is Satoshi Buterin";
+
+        const signature = EthCrypto.sign(
+            alice.privateKey,
+            EthCrypto.hash.keccak256(secretMessage)
+        );
+
+        const payload = {
+            message: secretMessage,
+            signature
+        };
+
+        const encrypted = await EthCrypto.encryptWithPublicKey(
+            bob.publicKey, // by encryping with bobs publicKey, only bob can decrypt the payload with his privateKey
+            JSON.stringify(payload) // we have to stringify the payload before we can encrypt it
+        );
+        
+        // we convert the object into a smaller string-representation
+        const encryptedString = EthCrypto.cipher.stringify(encrypted);
+
+        // we parse the string into the object again
+        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
+
+        const decrypted = await EthCrypto.decryptWithPrivateKey(
+            bob.privateKey,
+            encryptedObject
+        );
+        
+        const decryptedPayload = JSON.parse(decrypted);
+
+        // check signature
+        const senderAddress = EthCrypto.recover(
+            decryptedPayload.signature,
+            EthCrypto.hash.keccak256(decryptedPayload.message)
+        );
+
+        expect(senderAddress).to.equal(alice.address);
+        expect(decryptedPayload.message).to.equal(secretMessage);
     })
-
-    it("should verify the owner of the contract", async function() {
-        // HAD TO HARDCODE CREATORIDENTITY AS THE OWNER SINCE
-        // THE CONSTRUCTOR WOULD NOT ACCEPT ANY ARGUMENTS
-        expect(await EthCryptoTutorial.owner()).to.equal(creatorIdentity.address);
-    })
-
-    it("should send a transaction to the contract and verify its receipt", async function() {
-        // Pull contract address and assign
-        // it to a variable
-        const contractAddress = EthCryptoTutorial.address;
-
-        // Create transaction object
-        const tx = {
-            to: contractAddress,
-            value: ethers.utils.parseEther("1"),
-        }
-
-        // Send transaction to contract,
-        // activating its default function
-        await creatorIdentity.sendTransaction(tx);
-
-        // Declare and assign variable to store the
-        // contract's ether balance
-        let contractBalance = await EthCryptoTutorial.getBalance();
-
-        // Log the balance of the contract,
-        // to confirm it received the funds
-        console.log(contractBalance.toString());
-    })
-
-    /*
-    it("should allow the signing of data with JavaScript and validation of the signature in a smart contract.", async function() {
-
-    })
-    */
 })
