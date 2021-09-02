@@ -3,8 +3,8 @@ pragma solidity ^0.8.4;
 contract BerfChatStorage {
 
     /// Mapping storing an array of hashed messages
-    /// mapped to a conversation id.
-    mapping(bytes => bytes[]) private conversation;
+    /// mapped to a chat id.
+    mapping(bytes => bytes[]) private chat;
 
     event MessageSent(address from, address to);
 
@@ -27,8 +27,8 @@ contract BerfChatStorage {
     /// @param _message Hash of the intended message.
     /// (the message has been hashed off-chain.)
     function storeMessage(address _to, bytes _message) public {
-        bytes chatIdHash = hashAddresses(msg.sender, _to);
-        conversation[chatIdHash].push(_message);
+        bytes _chatId = hashAddresses(msg.sender, _to);
+        chat[_chatId].push(_message);
         emit MessageSent(msg.sender, _to);
     }
 
@@ -38,8 +38,8 @@ contract BerfChatStorage {
     /// @param _addr02 Address representing chat participant.
     /// @return _chat Hashes of the chat messages.
     function pullMessages(address _addr01, address _addr02) public view returns(bytes[] _chat) {
-        bytes chatId = hashAddresses(_addr01,_addr02);
-        bytes[] _chat = conversation[chatId];
+        bytes _chatId = hashAddresses(_addr01,_addr02);
+        bytes[] _chat = chat[_chatId];
         return _chat;
     }
 }
