@@ -5,7 +5,7 @@ contract BerfChatStorage {
 
     /// Mapping storing an array of hashed messages
     /// mapped to a chat id.
-    mapping(bytes => bytes[]) private chat;
+    mapping(bytes32 => bytes[]) private chat;
 
     event MessageSent(address from, address to);
 
@@ -15,9 +15,11 @@ contract BerfChatStorage {
     /// @dev uses keccak256 as its hashing function.
     /// @param _addr01 Address representing chat participant.
     /// @param _addr02 Address representing chat participant.
-    /// @return Hash of the provided addresses.
-    function hashAddresses(address _addr01, address _addr02) private returns(bytes _addressHash) {
-        bytes _addressHash = keccak256(_addr01, _addr02);
+    /// @return _addressHash Hash of the provided addresses.
+    function hashAddresses(address _addr01, address _addr02) private pure returns(bytes32) {
+        // GOOD APPROACH TO HASHING MULTIPLE VARIABLES?
+        bytes32 _addressHash = keccak256(abi.encodePacked(_addr01, _addr02));
+        // DATA LOCATION VERIFICATION
         return _addressHash;
     }
 
@@ -27,8 +29,8 @@ contract BerfChatStorage {
     /// @param _to Address of the message recipient.
     /// @param _message Hash of the intended message.
     /// (the message has been hashed off-chain.)
-    function storeMessage(address _to, bytes _message) public {
-        bytes _chatId = hashAddresses(msg.sender, _to);
+    function storeMessage(address _to, bytes memory _message) public {
+        bytes32 _chatId = hashAddresses(msg.sender, _to);
         chat[_chatId].push(_message);
         emit MessageSent(msg.sender, _to);
     }
@@ -38,9 +40,9 @@ contract BerfChatStorage {
     /// @param _addr01 Address representing chat participant.
     /// @param _addr02 Address representing chat participant.
     /// @return _chat Hashes of the chat messages.
-    function pullMessages(address _addr01, address _addr02) public view returns(bytes[] _chat) {
-        bytes _chatId = hashAddresses(_addr01,_addr02);
-        bytes[] _chat = chat[_chatId];
+    function pullMessages(address _addr01, address _addr02) public returns(bytes[] memory) {
+        bytes32 _chatId = hashAddresses(_addr01,_addr02);
+        bytes[] memory _chat = chat[_chatId];
         return _chat;
     }
 }
