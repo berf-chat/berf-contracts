@@ -6,7 +6,7 @@ contract BerfChatStorage {
     /// Mapping storing an array of hashed messages
     /// mapped to a chat id.
     mapping(bytes32 => bytes[]) private chat;
-
+    
     event MessageSent(address from, address to);
 
     /// @notice Takes two address and hashes them
@@ -40,7 +40,7 @@ contract BerfChatStorage {
     /// @param _addr01 Address representing chat participant.
     /// @param _addr02 Address representing chat participant.
     /// @return _chat Hashes of the chat messages.
-    function pullMessages(address _addr01, address _addr02) public returns(bytes[] memory) {
+    function pullMessages(address _addr01, address _addr02) public view returns(bytes[] memory) {
         bytes32 _chatId = hashAddresses(_addr01,_addr02);
         bytes[] memory _chat = chat[_chatId];
         return _chat;
