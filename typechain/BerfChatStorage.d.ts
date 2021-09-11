@@ -21,30 +21,30 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface BerfChatStorageInterface extends ethers.utils.Interface {
   functions: {
-    "pullMessages(address,address)": FunctionFragment;
-    "storeMessage(address,bytes)": FunctionFragment;
+    "hashAddresses(address,address)": FunctionFragment;
+    "sendMessage(address,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "pullMessages",
+    functionFragment: "hashAddresses",
     values: [string, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "storeMessage",
+    functionFragment: "sendMessage",
     values: [string, BytesLike]
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "pullMessages",
+    functionFragment: "hashAddresses",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "storeMessage",
+    functionFragment: "sendMessage",
     data: BytesLike
   ): Result;
 
   events: {
-    "MessageSent(address,address)": EventFragment;
+    "MessageSent(address,address,bytes32)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "MessageSent"): EventFragment;
@@ -94,39 +94,39 @@ export class BerfChatStorage extends BaseContract {
   interface: BerfChatStorageInterface;
 
   functions: {
-    pullMessages(
+    hashAddresses(
       _addr01: string,
       _addr02: string,
       overrides?: CallOverrides
-    ): Promise<[string[]]>;
+    ): Promise<[string]>;
 
-    storeMessage(
+    sendMessage(
       _to: string,
       _message: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
 
-  pullMessages(
+  hashAddresses(
     _addr01: string,
     _addr02: string,
     overrides?: CallOverrides
-  ): Promise<string[]>;
+  ): Promise<string>;
 
-  storeMessage(
+  sendMessage(
     _to: string,
     _message: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    pullMessages(
+    hashAddresses(
       _addr01: string,
       _addr02: string,
       overrides?: CallOverrides
-    ): Promise<string[]>;
+    ): Promise<string>;
 
-    storeMessage(
+    sendMessage(
       _to: string,
       _message: BytesLike,
       overrides?: CallOverrides
@@ -136,18 +136,22 @@ export class BerfChatStorage extends BaseContract {
   filters: {
     MessageSent(
       from?: null,
-      to?: null
-    ): TypedEventFilter<[string, string], { from: string; to: string }>;
+      to?: null,
+      chatId?: null
+    ): TypedEventFilter<
+      [string, string, string],
+      { from: string; to: string; chatId: string }
+    >;
   };
 
   estimateGas: {
-    pullMessages(
+    hashAddresses(
       _addr01: string,
       _addr02: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    storeMessage(
+    sendMessage(
       _to: string,
       _message: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -155,13 +159,13 @@ export class BerfChatStorage extends BaseContract {
   };
 
   populateTransaction: {
-    pullMessages(
+    hashAddresses(
       _addr01: string,
       _addr02: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    storeMessage(
+    sendMessage(
       _to: string,
       _message: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }

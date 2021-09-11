@@ -3,11 +3,9 @@ pragma solidity ^0.8.4;
 
 contract BerfChatStorage {
 
-    /// Mapping storing an array of hashed messages
-    /// mapped to a chat id.
-    mapping(bytes32 => bytes[]) private chat;
-    
-    event MessageSent(address from, address to);
+    mapping(address => mapping(address => bool)) existingChat;
+
+    event MessageSent(address from, address to, bytes32 chatId, uint time);
 
     /// @notice Takes two address and hashes them
     /// together to create a chat id comprised of
@@ -16,7 +14,7 @@ contract BerfChatStorage {
     /// @param _addr01 Address representing chat participant.
     /// @param _addr02 Address representing chat participant.
     /// @return _addressHash Hash of the provided addresses.
-    function hashAddresses(address _addr01, address _addr02) private pure returns(bytes32) {
+    function hashAddresses(address _addr01, address _addr02) /*private*/ public pure returns(bytes32) {
         // GOOD APPROACH TO HASHING MULTIPLE VARIABLES?
         bytes32 _addressHash = keccak256(abi.encodePacked(_addr01, _addr02));
         // DATA LOCATION VERIFICATION
@@ -29,12 +27,25 @@ contract BerfChatStorage {
     /// @param _to Address of the message recipient.
     /// @param _message Hash of the intended message.
     /// (the message has been hashed off-chain.)
-    function storeMessage(address _to, bytes memory _message) public {
-        bytes32 _chatId = hashAddresses(msg.sender, _to);
-        chat[_chatId].push(_message);
-        emit MessageSent(msg.sender, _to);
+    function sendMessage(address _to) public {
+        address _from = msg.sender;
+        bytes32 _chatId;
+
+        if(existingChat[_from][_to] == true) {
+            _chatId = hashAddresses(_from, _to);
+        } else if (existingChat[_to][_from] == true) {
+            _chatId = hashAddresses(_to, _from);
+        } else if (existingChat[_from][_to] == false && existingChat[_to][_from] == false) {
+            existingChat[_from][_to] = true;
+            _chatId = hashAddresses(_from, _to);
+        }
+
+        // DO NOT STORE HASHES
+        // chat[_chatId].push(_message);
+        emit MessageSent(_from, _to, _chatId, block.number);
     }
 
+    /*
     /// @notice Pulls the hashes of the chat messages
     /// as requested
     /// @param _addr01 Address representing chat participant.
@@ -45,4 +56,5 @@ contract BerfChatStorage {
         bytes[] memory _chat = chat[_chatId];
         return _chat;
     }
+    */
 }
