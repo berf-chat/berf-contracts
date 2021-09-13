@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
 
+import "hardhat/console.sol";
+
 contract BerfChatStorage {
 
+    // ONLY PUBLIC FOR TESTING
+    bytes32 public chatId;
+
+    // Mapping tracking whether there has already
+    // been an established chat between
+    // two provided addresses
     mapping(address => mapping(address => bool)) existingChat;
 
     event MessageSent(address from, address to, bytes32 chatId, uint time);
@@ -21,40 +29,23 @@ contract BerfChatStorage {
         return _addressHash;
     }
 
+
     /// @notice Takes the message sent and stores it by
     /// linking it to the chat id, comprised of the two
     /// participant's addresses.
     /// @param _to Address of the message recipient.
-    /// @param _message Hash of the intended message.
-    /// (the message has been hashed off-chain.)
     function sendMessage(address _to) public {
         address _from = msg.sender;
-        bytes32 _chatId;
 
         if(existingChat[_from][_to] == true) {
-            _chatId = hashAddresses(_from, _to);
+            chatId = hashAddresses(_from, _to);
         } else if (existingChat[_to][_from] == true) {
-            _chatId = hashAddresses(_to, _from);
+            chatId = hashAddresses(_to, _from);
         } else if (existingChat[_from][_to] == false && existingChat[_to][_from] == false) {
             existingChat[_from][_to] = true;
-            _chatId = hashAddresses(_from, _to);
+            chatId = hashAddresses(_from, _to);
         }
 
-        // DO NOT STORE HASHES
-        // chat[_chatId].push(_message);
-        emit MessageSent(_from, _to, _chatId, block.number);
+        emit MessageSent(_from, _to, chatId, block.number);
     }
-
-    /*
-    /// @notice Pulls the hashes of the chat messages
-    /// as requested
-    /// @param _addr01 Address representing chat participant.
-    /// @param _addr02 Address representing chat participant.
-    /// @return _chat Hashes of the chat messages.
-    function pullMessages(address _addr01, address _addr02) public view returns(bytes[] memory) {
-        bytes32 _chatId = hashAddresses(_addr01,_addr02);
-        bytes[] memory _chat = chat[_chatId];
-        return _chat;
-    }
-    */
 }
