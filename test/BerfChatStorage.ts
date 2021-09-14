@@ -3,6 +3,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { BerfChatStorage } from "../typechain/BerfChatStorage";
+import EthCrypto from 'eth-crypto';
 
 chai.use(solidity);
 
@@ -28,7 +29,7 @@ describe("BerfChatStorage contract tests", function () {
         berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
     });
 
-    it("confirms the first Singer deployed BerfChatStorage contract", async function () {
+    it("confirms the first Signer deployed BerfChatStorage contract", async function() {
         // Get BerfChatStorage to deploy
         const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
 
@@ -53,7 +54,7 @@ describe("BerfChatStorage contract tests", function () {
     });
     
 
-    it("compares two different outputs of hashMessages()", async function () {
+    it("compares two different outputs of hashMessages()", async function() {
         // Get BerfChatStorage to deploy
         const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
 
@@ -116,6 +117,7 @@ describe("BerfChatStorage contract tests", function () {
         const chatIdOneToTwo = await berfChatStorage.chatId();
         await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address);
         const chatIdTwoToOne = await berfChatStorage.chatId();
+
         expect(chatIdOneToTwo).to.equal(chatIdTwoToOne);
 
         // Send a message from accountThree
@@ -124,11 +126,12 @@ describe("BerfChatStorage contract tests", function () {
         // to verify they are different
         await berfChatStorage.connect(accountThree).sendMessage(accountFour.address);
         const chatIdThreeToFour = await berfChatStorage.chatId();
+
         expect(chatIdOneToTwo).to.not.equal(chatIdThreeToFour);
     })
 
     /*
-    it("tests the functionality of sendMessage", async function () {
+    it("tests the functionality of sendMessage", async function() {
         // Get BerfChatStorage to deploy
         const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
 
@@ -136,13 +139,12 @@ describe("BerfChatStorage contract tests", function () {
         // assign to 'accounts'
         const accounts = await ethers.getSigners();
 
-        // declare first two accounts
-        // as sender and recipient
-        // of message
-        const sender = accounts[0];
-        const recipient = accounts[1];
+        // declare and assign
+        // first two accounts
+        const accountOne = accounts[0];
+        const accountTwo = accounts[1];
 
-        // Deploy berfChatStorage from first account
+        // Deploy berfChatStorage from accountOne
         berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
 
 
@@ -153,9 +155,41 @@ describe("BerfChatStorage contract tests", function () {
         // the MessageSent event
         // Note: currently have to hardcode the Hardhat
         // Network block number (parameter number 4)
-        await expect(berfChatStorage.sendMessage(recipient.address))
+        await expect(berfChatStorage.sendMessage(accountTwo.address))
         .to.emit(berfChatStorage, 'MessageSent')
-        .withArgs(sender.address, recipient.address, (await berfChatStorage.hashAddresses(sender.address, recipient.address)), 2);
+        .withArgs(
+            accountOne.address,
+            accountTwo.address,
+            (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
+            2 //Currently hard coding the HRE block number
+        );
+    })
+
+    it("tests sending message hashes using EthCrypto", async function() {
+        // Get BerfChatStorage to deploy
+        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
+
+        // Pull array of Signers and
+        // assign to 'accounts'
+        const accounts = await ethers.getSigners();
+
+        // declare and assign
+        // first two accounts
+        const accountOne = accounts[0];
+        const accountTwo = accounts[1];
+
+        // Deploy berfChatStorage from accountOne
+        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
+
+        // Declare and assign variable
+        // with secret string, then hash the string.
+        const secretMessage = "Hey, how are you?";
+        const messageHash = EthCrypto.hash.keccak256(secretMessage);
+        console.log("This is the message hash: " + messageHash);
+        // Used ethers signMessage() instead of EthCrypto.sign()
+        const signature = await accountOne.signMessage(messageHash);
+
+        console.log("This is the signature: " + signature);
     })
     */
 });
