@@ -5,116 +5,67 @@ import { Signer } from "ethers";
 import { BerfChatStorage } from "../typechain/BerfChatStorage";
 import EthCrypto from 'eth-crypto';
 
+import { toBuffer, unpadBuffer, privateToAddress, privateToPublic } from "ethereumjs-util";
+import getPublicKeyString from "ethereumjs-wallet";
+import Wallet from "ethereumjs-wallet";
+
+import privateKeyToPublicKey from "ethereum-private-key-to-public-key";
+
 chai.use(solidity);
 
 const { expect } = chai;
 
-describe("BerfChatStorage contract tests", function () {
+describe("BerfChatStorage contract tests", async () => {
+    
+    // Get BerfChatStorage to deploy
     let berfChatStorage: BerfChatStorage;
 
-    /*
-    before(async function() {
+    // Pull array of Signers and
+    // assign to 'accounts'
+    let accountOne : any;
+    let accountTwo : any;
+    let accountThree : any;
+    let accountFour : any;
+
+    before(async () => {
         // Get BerfChatStorage to deploy
         const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
 
         // Pull array of Signers and
         // assign to 'accounts'
-        const accounts = await ethers.getSigners();
-
-        // declare first idenx item in
-        // 'accounts' to named variable
-        const firstAccount = accounts[0];
+        [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
 
         // Deploy berfChatStorage from first account
         berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
     });
 
-    it("confirms the first Signer deployed BerfChatStorage contract", async function() {
-        // Get BerfChatStorage to deploy
-        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
-
-        // Pull array of Signers and
-        // assign to 'accounts'
-        const accounts = await ethers.getSigners();
-
-        // declare first idex item in
-        // 'accounts' to named variable
-        const firstAccount = accounts[0];
-
-        // Deploy berfChatStorage from first account
-        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
-
-
-
-
-
+    /*
+    it("confirms accountOne deployed BerfChatStorage contract", async () => {
         // Confirm the address that deployed
         // BerfChatStorage contract is firstAccount
-        expect(await berfChatStorage.deployTransaction.from).to.equal(firstAccount.address);
+        expect(await berfChatStorage.deployTransaction.from).to.equal(accountOne.address);
     });
     
-
-    it("compares two different outputs of hashMessages()", async function() {
-        // Get BerfChatStorage to deploy
-        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
-
-        // Pull array of Signers and
-        // assign to 'accounts'
-        const accounts = await ethers.getSigners();
-
-        // declare first two accounts
-        // as sender and recipient
-        // of message
-        const sender = accounts[0];
-        const recipient = accounts[1];
-
-        // Deploy berfChatStorage from first account
-        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
-
-
-
-
-
+    it("confirms the order of the addresses hashed via hashAddresses() changes the output", async () => {
         // Hash addresses as two different
         // sequences of inputting as parameters
-        const firstHash = await berfChatStorage.hashAddresses(sender.address, recipient.address);
-        const secondHash = await berfChatStorage.hashAddresses(recipient.address, sender.address);
-
-        console.log("First hash is " + firstHash);
-        console.log("Second hash is " + secondHash);
+        const firstHash = await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address);
+        const secondHash = await berfChatStorage.hashAddresses(accountTwo.address, accountOne.address);
 
         // Compare the two different hashes
         // to confirm whether the order of
         // the parameters affects the end hash
-        // expect(firstHash).to.not.equal(secondHash);
+        expect(firstHash).to.not.equal(secondHash);
     });
-    */
 
-    it("compares the generated chatId from sendMessage() from different msg.sender's", async function() {
-        // Get BerfChatStorage to deploy
-        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
-
-        // Pull array of Signers and
-        // assign to 'accounts'
-        const accounts = await ethers.getSigners();
-
-        // declare and assign first two accounts
-        const accountOne = accounts[0];
-        const accountTwo = accounts[1];
-
-        const accountThree = accounts[2];
-        const accountFour = accounts[3];
-
-        // Deploy berfChatStorage from first account
-        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
-
-
+    it("compares the generated chatId from sendMessage() from different msg.senders", async () => {
         // Send two messages, one from accountOne
         // to accountTwo and then one from accountTwo
         // to accountOne and confirm the function
         // call generates the same chatId for both instances
         await berfChatStorage.sendMessage(accountTwo.address);
         const chatIdOneToTwo = await berfChatStorage.chatId();
+
         await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address);
         const chatIdTwoToOne = await berfChatStorage.chatId();
 
@@ -130,27 +81,7 @@ describe("BerfChatStorage contract tests", function () {
         expect(chatIdOneToTwo).to.not.equal(chatIdThreeToFour);
     })
 
-    /*
-    it("tests the functionality of sendMessage", async function() {
-        // Get BerfChatStorage to deploy
-        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
-
-        // Pull array of Signers and
-        // assign to 'accounts'
-        const accounts = await ethers.getSigners();
-
-        // declare and assign
-        // first two accounts
-        const accountOne = accounts[0];
-        const accountTwo = accounts[1];
-
-        // Deploy berfChatStorage from accountOne
-        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
-
-
-
-
-
+    it("tests the functionality of sendMessage", async () => {
         // Confirm the sendMessage function emitted
         // the MessageSent event
         // Note: currently have to hardcode the Hardhat
@@ -164,32 +95,92 @@ describe("BerfChatStorage contract tests", function () {
             2 //Currently hard coding the HRE block number
         );
     })
+    */
 
-    it("tests sending message hashes using EthCrypto", async function() {
-        // Get BerfChatStorage to deploy
-        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
+    it("tests sending message hashes using EthCrypto", async () => {
+        /*
+        THIS GENERATES DIFFERENT ADDRESSES THAN 
+        THE ONES PROVIDED BY HARDHAT EVEN IF IT
+        USES THE SAME PRIVATE KEYS
 
-        // Pull array of Signers and
-        // assign to 'accounts'
-        const accounts = await ethers.getSigners();
+        // Declare and assign variables the value
+        // of the account private keys provided
+        // by Hardhat
+        const accountOnePrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        const accountTwoPrivateKey = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
 
-        // declare and assign
-        // first two accounts
-        const accountOne = accounts[0];
-        const accountTwo = accounts[1];
+        // Make Buffers out of both private keyes
+        const privateKeyBufferOne = toBuffer(accountOnePrivateKey);
+        const privateKeyBufferTwo = toBuffer(accountTwoPrivateKey);
 
-        // Deploy berfChatStorage from accountOne
-        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
+        // Create wallets out of those Buffers
+        const accountOneWallet = Wallet.fromPrivateKey(privateKeyBufferOne);
+        const accountTwoWallet = Wallet.fromPrivateKey(privateKeyBufferTwo);
+
+        // Derive the public keys from those wallets
+        const accountOnePublicKey = accountOneWallet.getPublicKeyString();
+        const accountTwoPublicKey = accountTwoWallet.getPublicKeyString();
+
+        const accountOneAddress = accountOneWallet.getAddressString();
+        const accountTwoAddress = accountTwoWallet.getAddressString();
+        */
 
         // Declare and assign variable
         // with secret string, then hash the string.
         const secretMessage = "Hey, how are you?";
         const messageHash = EthCrypto.hash.keccak256(secretMessage);
-        console.log("This is the message hash: " + messageHash);
+
         // Used ethers signMessage() instead of EthCrypto.sign()
         const signature = await accountOne.signMessage(messageHash);
 
-        console.log("This is the signature: " + signature);
+        // Create object with message and signature
+        const payload = {
+            message: messageHash,
+            signature
+        }
+
+        // const privateKeyToAccountOneAddress = privateToAddress(toBuffer(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80));
+        // const accountOnePublicKey = privateToPublic(toBuffer(accountOnePrivateKey));
+        // const accountOneWallet = new getPublicKeyString(privateKeyBuffer);
+        // console.log(accountOneWallet.publicKey);
+        // console.log(unpadBuffer(accountOnePublicKey));
+        // console.log(unpadBuffer(privateKeyToAccountOneAddress);
+
+        /*
+        // Encrypt the payload with
+        // accountTwo's public key
+        const encrypted = await EthCrypto.encryptWithPublicKey(
+            accountTwo.publicKey,
+            JSON.stringify(payload)
+        );
+
+        // Convert the object into a smaller string-representation
+        const encryptedString = EthCrypto.cipher.stringify(encrypted);
+
+        // ~~~~ Sending message from accountOne to accountTwo~~~
+
+        // Parse the string into the object again
+        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
+
+        // Decrypt using accountTwo's private key
+        const decrypted = await EthCrypto.decryptWithPrivateKey(
+            accountTwo.privateKey,
+            encryptedObject
+        );
+        const decryptedPayload = JSON.parse(decrypted);
+
+        // Check signature
+        const senderAddress = EthCrypto.recover(
+            decryptedPayload.signature,
+            EthCrypto.hash.keccak256(decryptedPayload.message)
+        );
+
+        console.log(
+            'Got message from ' +
+            senderAddress +
+            ': ' +
+            decryptedPayload.message
+        );
+        */
     })
-    */
 });
