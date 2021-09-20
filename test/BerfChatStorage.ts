@@ -9,7 +9,7 @@ import { toBuffer, unpadBuffer, privateToAddress, privateToPublic } from "ethere
 import getPublicKeyString from "ethereumjs-wallet";
 import Wallet from "ethereumjs-wallet";
 
-import privateKeyToPublicKey from "ethereum-private-key-to-public-key";
+// import privateKeyToPublicKey from "ethereum-private-key-to-public-key";
 
 chai.use(solidity);
 
@@ -98,75 +98,56 @@ describe("BerfChatStorage contract tests", async () => {
     */
 
     it("tests sending message hashes using EthCrypto", async () => {
-        /*
-        THIS GENERATES DIFFERENT ADDRESSES THAN 
-        THE ONES PROVIDED BY HARDHAT EVEN IF IT
-        USES THE SAME PRIVATE KEYS
 
-        // Declare and assign variables the value
-        // of the account private keys provided
-        // by Hardhat
-        const accountOnePrivateKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
-        const accountTwoPrivateKey = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
-
-        // Make Buffers out of both private keyes
-        const privateKeyBufferOne = toBuffer(accountOnePrivateKey);
-        const privateKeyBufferTwo = toBuffer(accountTwoPrivateKey);
-
-        // Create wallets out of those Buffers
-        const accountOneWallet = Wallet.fromPrivateKey(privateKeyBufferOne);
-        const accountTwoWallet = Wallet.fromPrivateKey(privateKeyBufferTwo);
-
-        // Derive the public keys from those wallets
-        const accountOnePublicKey = accountOneWallet.getPublicKeyString();
-        const accountTwoPublicKey = accountTwoWallet.getPublicKeyString();
-
-        const accountOneAddress = accountOneWallet.getAddressString();
-        const accountTwoAddress = accountTwoWallet.getAddressString();
-        */
+        // Used the EthCrypto library to create accounts
+        // rather than using Hardhat because for testing
+        // purposes, it is much easier to retrieve 
+        // public keys with it.
+        const accountOne = EthCrypto.createIdentity();
+        const accountTwo = EthCrypto.createIdentity();
 
         // Declare and assign variable
         // with secret string, then hash the string.
         const secretMessage = "Hey, how are you?";
-        const messageHash = EthCrypto.hash.keccak256(secretMessage);
 
         // Used ethers signMessage() instead of EthCrypto.sign()
-        const signature = await accountOne.signMessage(messageHash);
+        // const signature = await accountOne.signMessage(messageHash);
+
+        // Sign the message with accountOne's
+        // private key
+        const signature = EthCrypto.sign(
+            accountOne.privateKey,
+            EthCrypto.hash.keccak256(secretMessage)
+        );
 
         // Create object with message and signature
         const payload = {
-            message: messageHash,
+            message: secretMessage,
             signature
-        }
+        };
 
-        // const privateKeyToAccountOneAddress = privateToAddress(toBuffer(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80));
-        // const accountOnePublicKey = privateToPublic(toBuffer(accountOnePrivateKey));
-        // const accountOneWallet = new getPublicKeyString(privateKeyBuffer);
-        // console.log(accountOneWallet.publicKey);
-        // console.log(unpadBuffer(accountOnePublicKey));
-        // console.log(unpadBuffer(privateKeyToAccountOneAddress);
-
-        /*
-        // Encrypt the payload with
-        // accountTwo's public key
+        // Encrypt the message and the signature with
+        // accountTwo's publicKey. (By encrypting it
+        // with accountTwo's public key, only accountTwo
+        // can decrypt `payload` with his private key.)
         const encrypted = await EthCrypto.encryptWithPublicKey(
             accountTwo.publicKey,
-            JSON.stringify(payload)
+            JSON.stringify(payload) // Stringify the payload to allow encryption
         );
 
-        // Convert the object into a smaller string-representation
+        // Convert object into smaller string-representation
         const encryptedString = EthCrypto.cipher.stringify(encrypted);
 
-        // ~~~~ Sending message from accountOne to accountTwo~~~
+        /* ~~~~ Sending message from accountOne to accountTwo~~~ */
 
-        // Parse the string into the object again
+        // Parse the string back to an object
         const encryptedObject = EthCrypto.cipher.parse(encryptedString);
 
-        // Decrypt using accountTwo's private key
         const decrypted = await EthCrypto.decryptWithPrivateKey(
             accountTwo.privateKey,
             encryptedObject
         );
+
         const decryptedPayload = JSON.parse(decrypted);
 
         // Check signature
@@ -175,12 +156,8 @@ describe("BerfChatStorage contract tests", async () => {
             EthCrypto.hash.keccak256(decryptedPayload.message)
         );
 
-        console.log(
-            'Got message from ' +
-            senderAddress +
-            ': ' +
-            decryptedPayload.message
-        );
-        */
+        expect(senderAddress).to.equal(accountOne.address);
+
+        expect(decryptedPayload.message).to.equal(secretMessage);
     })
 });
