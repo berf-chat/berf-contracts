@@ -33,9 +33,12 @@ describe("BerfChatStorage contract tests", async () => {
     let accountThree : any;
     let accountFour : any;
 
+    const accountOnePrivKey : string = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    const accountTwoPrivKey : string = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
+
     // Generate public key from accountTwo private key
-    const accountTwoPublicKey : string = EthCrypto.publicKeyByPrivateKey(
-        "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d" // accountTwo private key
+    const accountTwoPubKey : string = EthCrypto.publicKeyByPrivateKey(
+        accountTwoPrivKey
     );
 
     before(async () => {
@@ -228,7 +231,7 @@ describe("BerfChatStorage contract tests", async () => {
         const secretMessage = "Satoshi is not Vitalik.";
 
         const signature = EthCrypto.sign(
-            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // accountOne private key
+            accountOnePrivKey,
             EthCrypto.hash.keccak256(secretMessage)
         );
 
@@ -239,7 +242,7 @@ describe("BerfChatStorage contract tests", async () => {
         };
 
         const encrypted = await EthCrypto.encryptWithPublicKey(
-            accountTwoPublicKey,
+            accountTwoPubKey,
             JSON.stringify(payload)
         );
 
@@ -267,7 +270,7 @@ describe("BerfChatStorage contract tests", async () => {
         // Decrypt the received message with the
         // private key of the recipient, accountTwo
         const decrypted = await EthCrypto.decryptWithPrivateKey(
-            "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", // accountTwo privateKey
+            accountTwoPrivKey,
             encryptedObject
         );
 
@@ -287,6 +290,7 @@ describe("BerfChatStorage contract tests", async () => {
         expect(decryptedPayload.message).to.equal(secretMessage);
 
 
+        // BELOW IS RESPONSE MESSAGE //
 
 
         // Declare and assign variable
@@ -294,7 +298,7 @@ describe("BerfChatStorage contract tests", async () => {
         const secretResponse = "Now I know Vitalik is not Satoshi.";
 
         const responseSignature = EthCrypto.sign(
-            "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", // accountTwo private key
+            accountTwoPrivKey,
             EthCrypto.hash.keccak256(secretResponse)
         );
 
@@ -304,15 +308,15 @@ describe("BerfChatStorage contract tests", async () => {
             signature: responseSignature
         };
 
-        // Recover accountOnePublicKey from
+        // Recover accountOnePubKey from
         // previously sent message
-        const accountOnePublicKey = EthCrypto.recoverPublicKey(
+        const accountOnePubKey = EthCrypto.recoverPublicKey(
             decryptedPayload.signature,
             EthCrypto.hash.keccak256(payload.message)
         );
 
         const encryptedResponse = await EthCrypto.encryptWithPublicKey(
-            accountOnePublicKey,
+            accountOnePubKey,
             JSON.stringify(responsePayload)
         );
 
@@ -335,7 +339,7 @@ describe("BerfChatStorage contract tests", async () => {
         );
 
 
-
+        // DECRYPT THE RESPONSE MESSAGE //
 
 
         // Parse the string back to an object
@@ -344,7 +348,7 @@ describe("BerfChatStorage contract tests", async () => {
         // Decrypt the received message with the
         // private key of the recipient, accountOne
         const decryptedResponse = await EthCrypto.decryptWithPrivateKey(
-            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // accountOne privateKey
+            accountOnePrivKey,
             encryptedResponseObject
         );
 
