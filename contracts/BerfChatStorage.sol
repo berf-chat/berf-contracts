@@ -8,7 +8,7 @@ contract BerfChatStorage {
     // ONLY PUBLIC FOR TESTING
     bytes32 public chatId;
 
-    event MessageSent(address from, address to, /*bytes32 messageHash,*/ bytes32 chatId, uint time);
+    event MessageSent(address from, address to, bytes32 chatId, string messageHash, uint time);
 
     /// @notice Takes two address and hashes them
     /// together to create a chat id comprised of
@@ -36,7 +36,7 @@ contract BerfChatStorage {
     /// in the same order into the hashing function,
     /// to generate the exact same chat id hash.
     /// @param _to Address of the message recipient.
-    function sendMessage(address _to/*, bytes32 _messageHash*/) public {
+    function sendMessage(address _to, string memory _messageHash) public {
         address _from = msg.sender;
 
         if(_from > _to) {
@@ -45,6 +45,6 @@ contract BerfChatStorage {
             chatId = hashAddresses(_to, _from);
         }
 
-        emit MessageSent(_from, _to, chatId, /*_messageHash,*/ block.number);
+        emit MessageSent(_from, _to, chatId, _messageHash, block.number);
     }
 }

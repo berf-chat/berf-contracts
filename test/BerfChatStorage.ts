@@ -5,8 +5,9 @@ import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
 import { BerfChatStorage } from "../typechain/BerfChatStorage";
 import EthCrypto from "eth-crypto";
+import { rejects } from "assert";
 
-// import { expectRevert } from "@openzeppelin/test-helpers";
+// import expectRevert from "@openzeppelin/test-helpers";
 
 // import { toBuffer, unpadBuffer, privateToAddress, privateToPublic } from "ethereumjs-util";
 // import getPublicKeyString from "ethereumjs-wallet";
@@ -31,6 +32,11 @@ describe("BerfChatStorage contract tests", async () => {
     let accountTwo : any;
     let accountThree : any;
     let accountFour : any;
+
+    // Generate public key from accountTwo private key
+    const accountTwoPublicKey : string = EthCrypto.publicKeyByPrivateKey(
+        "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d" // accountTwo private key
+    );
 
     before(async () => {
         // Get BerfChatStorage to deploy
@@ -164,7 +170,6 @@ describe("BerfChatStorage contract tests", async () => {
 
         expect(decryptedPayload.message).to.equal(secretMessage);
     })
-    */
 
     it("confirms that only the public key's private key can decrypt the message", async () => {
         // Create new accounts
@@ -196,7 +201,7 @@ describe("BerfChatStorage contract tests", async () => {
         // Encrypt the message and the signature with
         // accountDos' publicKey. (By encrypting it
         // with accountDos' public key, only accountDos
-        // can decrypt `payload` with his private key.)
+        // can decrypt `payload` with its private key.)
         const encrypted = await EthCrypto.encryptWithPublicKey(
             accountDos.publicKey,
             JSON.stringify(payload) // Stringify the payload to allow encryption
@@ -212,16 +217,150 @@ describe("BerfChatStorage contract tests", async () => {
         // Parse the string back to an object
         const encryptedObject = EthCrypto.cipher.parse(encryptedString);
 
-        // Attempt to decrypt with accountTres,
-        // instead of accountDos
-        /*
-        return expect(Promise.resolve(
-            await EthCrypto.decryptWithPrivateKey(
-                accountTres.privateKey,
-                encryptedObject
-            )
-        )).to.eventually.throw("Error: Bad MAC");
-        */
-       expect(function () { EthCrypto.decryptWithPrivateKey(accountTres.privateKey, encryptedObject); }).to.throw();
+        // Confirm that acountTres CANNOT decrypt message
+        await rejects(EthCrypto.decryptWithPrivateKey(accountTres.privateKey, encryptedObject));
     });
+    */
+
+    it("tests sending a message via the contract", async () => {
+        // Declare and assign variable
+        // with secret string.
+        const secretMessage = "Satoshi is not Vitalik.";
+
+        const signature = EthCrypto.sign(
+            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // accountOne private key
+            EthCrypto.hash.keccak256(secretMessage)
+        );
+
+        // Create object with message and signature
+        const payload = {
+            message: secretMessage,
+            signature
+        };
+
+        const encrypted = await EthCrypto.encryptWithPublicKey(
+            accountTwoPublicKey,
+            JSON.stringify(payload)
+        );
+
+        // Convert object into smaller string-representation
+        // (This variable of type string)
+        const encryptedString = EthCrypto.cipher.stringify(encrypted);
+
+        // Confirm the sendMessage function emitted
+        // the MessageSent event
+        // Note: currently have to hardcode the Hardhat
+        // Network block number (parameter number 4)
+        await expect(berfChatStorage.sendMessage(accountTwo.address, encryptedString))
+        .to.emit(berfChatStorage, 'MessageSent')
+        .withArgs(
+            accountOne.address,
+            accountTwo.address,
+            (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
+            encryptedString,
+            2 //Currently hard coding the HRE block number
+        );
+
+        // Parse the string back to an object
+        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
+
+        // Decrypt the received message with the
+        // private key of the recipient, accountTwo
+        const decrypted = await EthCrypto.decryptWithPrivateKey(
+            "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", // accountTwo privateKey
+            encryptedObject
+        );
+
+        const decryptedPayload = JSON.parse(decrypted);
+
+        // Check signature
+        const senderAddress = EthCrypto.recover(
+            decryptedPayload.signature,
+            EthCrypto.hash.keccak256(decryptedPayload.message)
+        );
+
+        // Confirm the address that sent it is accountOne
+        expect(senderAddress).to.equal(accountOne.address);
+
+        // Confirm the decrypted message is
+        // what was declared earlier
+        expect(decryptedPayload.message).to.equal(secretMessage);
+
+
+
+
+        // Declare and assign variable
+        // with secret string.
+        const secretResponse = "Now I know Vitalik is not Satoshi.";
+
+        const responseSignature = EthCrypto.sign(
+            "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", // accountTwo private key
+            EthCrypto.hash.keccak256(secretResponse)
+        );
+
+        // Create object with message and signature
+        const responsePayload = {
+            message: secretResponse,
+            signature: responseSignature
+        };
+
+        // Recover accountOnePublicKey from
+        // previously sent message
+        const accountOnePublicKey = EthCrypto.recoverPublicKey(
+            decryptedPayload.signature,
+            EthCrypto.hash.keccak256(payload.message)
+        );
+
+        const encryptedResponse = await EthCrypto.encryptWithPublicKey(
+            accountOnePublicKey,
+            JSON.stringify(responsePayload)
+        );
+
+        // Convert object into smaller string-representation
+        // (This variable of type string)
+        const encryptedResponseString = EthCrypto.cipher.stringify(encryptedResponse);
+
+        // Confirm the sendMessage function emitted
+        // the MessageSent event
+        // Note: currently have to hardcode the Hardhat
+        // Network block number (parameter number 4)
+        await expect(berfChatStorage.connect(accountTwo).sendMessage(accountOne.address, encryptedResponseString))
+        .to.emit(berfChatStorage, 'MessageSent')
+        .withArgs(
+            accountTwo.address,
+            accountOne.address,
+            (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
+            encryptedResponseString,
+            3 //Currently hard coding the HRE block number
+        );
+
+
+
+
+
+        // Parse the string back to an object
+        const encryptedResponseObject = EthCrypto.cipher.parse(encryptedResponseString);
+        
+        // Decrypt the received message with the
+        // private key of the recipient, accountOne
+        const decryptedResponse = await EthCrypto.decryptWithPrivateKey(
+            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // accountOne privateKey
+            encryptedResponseObject
+        );
+
+        const decryptedResponsePayload = JSON.parse(decryptedResponse);
+
+        // Check signature
+        const responseSenderAddress = EthCrypto.recover(
+            decryptedResponsePayload.signature,
+            EthCrypto.hash.keccak256(decryptedResponsePayload.message)
+        );
+
+        // Confirm the address that sent it is accountOne
+        expect(responseSenderAddress).to.equal(accountTwo.address);
+
+        // Confirm the decrypted message is
+        // what was declared earlier
+        expect(decryptedResponsePayload.message).to.equal(secretResponse);
+    })
 });
