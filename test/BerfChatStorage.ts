@@ -28,16 +28,16 @@ describe("BerfChatStorage contract tests", async () => {
 
     // Pull array of Signers and
     // assign to 'accounts'
-    let accountOne : any;
-    let accountTwo : any;
-    let accountThree : any;
-    let accountFour : any;
+    let accountOne: any;
+    let accountTwo: any;
+    let accountThree: any;
+    let accountFour: any;
 
-    const accountOnePrivKey : string = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-    const accountTwoPrivKey : string = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
+    const accountOnePrivKey: string = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+    const accountTwoPrivKey: string = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
 
     // Generate public key from accountTwo private key
-    const accountTwoPubKey : string = EthCrypto.publicKeyByPrivateKey(
+    const accountTwoPubKey: string = EthCrypto.publicKeyByPrivateKey(
         accountTwoPrivKey
     );
 
@@ -228,27 +228,29 @@ describe("BerfChatStorage contract tests", async () => {
     it("tests sending a message via the contract", async () => {
         // Declare and assign variable
         // with secret string.
-        const secretMessage = "Satoshi is not Vitalik.";
+        const secretMessage: string = "Satoshi is not Vitalik.";
 
-        const signature = EthCrypto.sign(
+        const signature: string = EthCrypto.sign(
             accountOnePrivKey,
             EthCrypto.hash.keccak256(secretMessage)
         );
 
+        
         // Create object with message and signature
-        const payload = {
+        const payload: any = {
             message: secretMessage,
             signature
         };
-
-        const encrypted = await EthCrypto.encryptWithPublicKey(
+        
+        // NOT SURE WHICH TYPE TO MAKE THIS
+        const encrypted: any = await EthCrypto.encryptWithPublicKey(
             accountTwoPubKey,
             JSON.stringify(payload)
         );
 
         // Convert object into smaller string-representation
         // (This variable of type string)
-        const encryptedString = EthCrypto.cipher.stringify(encrypted);
+        const encryptedString: string = EthCrypto.cipher.stringify(encrypted);
 
         // Confirm the sendMessage function emitted
         // the MessageSent event
@@ -265,19 +267,19 @@ describe("BerfChatStorage contract tests", async () => {
         );
 
         // Parse the string back to an object
-        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
-
+        const encryptedObject: any = EthCrypto.cipher.parse(encryptedString);
+        
         // Decrypt the received message with the
         // private key of the recipient, accountTwo
-        const decrypted = await EthCrypto.decryptWithPrivateKey(
+        const decrypted: string = await EthCrypto.decryptWithPrivateKey(
             accountTwoPrivKey,
             encryptedObject
         );
-
-        const decryptedPayload = JSON.parse(decrypted);
-
+        
+        const decryptedPayload: any = JSON.parse(decrypted);
+        
         // Check signature
-        const senderAddress = EthCrypto.recover(
+        const senderAddress: string = EthCrypto.recover(
             decryptedPayload.signature,
             EthCrypto.hash.keccak256(decryptedPayload.message)
         );
@@ -295,34 +297,34 @@ describe("BerfChatStorage contract tests", async () => {
 
         // Declare and assign variable
         // with secret string.
-        const secretResponse = "Now I know Vitalik is not Satoshi.";
+        const secretResponse: string = "Now I know Vitalik is not Satoshi.";
 
-        const responseSignature = EthCrypto.sign(
+        const responseSignature: string = EthCrypto.sign(
             accountTwoPrivKey,
             EthCrypto.hash.keccak256(secretResponse)
         );
 
         // Create object with message and signature
-        const responsePayload = {
+        const responsePayload: any = {
             message: secretResponse,
             signature: responseSignature
         };
 
         // Recover accountOnePubKey from
         // previously sent message
-        const accountOnePubKey = EthCrypto.recoverPublicKey(
+        const accountOnePubKey: string = EthCrypto.recoverPublicKey(
             decryptedPayload.signature,
             EthCrypto.hash.keccak256(payload.message)
         );
 
-        const encryptedResponse = await EthCrypto.encryptWithPublicKey(
+        const encryptedResponse: any = await EthCrypto.encryptWithPublicKey(
             accountOnePubKey,
             JSON.stringify(responsePayload)
         );
 
         // Convert object into smaller string-representation
         // (This variable of type string)
-        const encryptedResponseString = EthCrypto.cipher.stringify(encryptedResponse);
+        const encryptedResponseString: any = EthCrypto.cipher.stringify(encryptedResponse);
 
         // Confirm the sendMessage function emitted
         // the MessageSent event
@@ -343,19 +345,19 @@ describe("BerfChatStorage contract tests", async () => {
 
 
         // Parse the string back to an object
-        const encryptedResponseObject = EthCrypto.cipher.parse(encryptedResponseString);
+        const encryptedResponseObject: any = EthCrypto.cipher.parse(encryptedResponseString);
         
         // Decrypt the received message with the
         // private key of the recipient, accountOne
-        const decryptedResponse = await EthCrypto.decryptWithPrivateKey(
+        const decryptedResponse: string = await EthCrypto.decryptWithPrivateKey(
             accountOnePrivKey,
             encryptedResponseObject
         );
 
-        const decryptedResponsePayload = JSON.parse(decryptedResponse);
+        const decryptedResponsePayload: any = JSON.parse(decryptedResponse);
 
         // Check signature
-        const responseSenderAddress = EthCrypto.recover(
+        const responseSenderAddress: string = EthCrypto.recover(
             decryptedResponsePayload.signature,
             EthCrypto.hash.keccak256(decryptedResponsePayload.message)
         );

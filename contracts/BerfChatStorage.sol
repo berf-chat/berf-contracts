@@ -22,7 +22,6 @@ contract BerfChatStorage {
         pure
         returns(bytes32)
     {
-        // GOOD APPROACH TO HASHING MULTIPLE VARIABLES?
         bytes32 _addressHash = keccak256(abi.encodePacked(_addr01, _addr02));
         return _addressHash;
     }
@@ -36,6 +35,8 @@ contract BerfChatStorage {
     /// in the same order into the hashing function,
     /// to generate the exact same chat id hash.
     /// @param _to Address of the message recipient.
+    /// @param _messageHash String that is the hash
+    /// of the message contents (generated off-chain)
     function sendMessage(address _to, string memory _messageHash) public {
         address _from = msg.sender;
 
