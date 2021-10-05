@@ -41,6 +41,12 @@ describe("BerfChatStorage contract tests", async () => {
         accountTwoPrivKey
     );
 
+    let decryptedPayload: any;
+    let payload: any;
+
+    let secretResponse: string;
+    let encryptedResponseString: any;
+
     before(async () => {
         // Get BerfChatStorage to deploy
         const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
@@ -237,7 +243,7 @@ describe("BerfChatStorage contract tests", async () => {
 
         
         // Create object with message and signature
-        const payload: any = {
+        payload = {
             message: secretMessage,
             signature
         };
@@ -276,7 +282,7 @@ describe("BerfChatStorage contract tests", async () => {
             encryptedObject
         );
         
-        const decryptedPayload: any = JSON.parse(decrypted);
+        decryptedPayload = JSON.parse(decrypted);
         
         // Check signature
         const senderAddress: string = EthCrypto.recover(
@@ -290,14 +296,12 @@ describe("BerfChatStorage contract tests", async () => {
         // Confirm the decrypted message is
         // what was declared earlier
         expect(decryptedPayload.message).to.equal(secretMessage);
+    })
 
-
-        // BELOW IS RESPONSE MESSAGE //
-
-
+    it("tests responding to a message via the contract", async () => {
         // Declare and assign variable
         // with secret string.
-        const secretResponse: string = "Now I know Vitalik is not Satoshi.";
+        secretResponse = "Now I know Vitalik is not Satoshi.";
 
         const responseSignature: string = EthCrypto.sign(
             accountTwoPrivKey,
@@ -324,7 +328,7 @@ describe("BerfChatStorage contract tests", async () => {
 
         // Convert object into smaller string-representation
         // (This variable of type string)
-        const encryptedResponseString: any = EthCrypto.cipher.stringify(encryptedResponse);
+        encryptedResponseString = EthCrypto.cipher.stringify(encryptedResponse);
 
         // Confirm the sendMessage function emitted
         // the MessageSent event
@@ -339,11 +343,9 @@ describe("BerfChatStorage contract tests", async () => {
             encryptedResponseString,
             3 //Currently hard coding the HRE block number
         );
+    })
 
-
-        // DECRYPT THE RESPONSE MESSAGE //
-
-
+    it("decrypts the response message", async () => {
         // Parse the string back to an object
         const encryptedResponseObject: any = EthCrypto.cipher.parse(encryptedResponseString);
         
