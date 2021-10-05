@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
 
-import "hardhat/console.sol";
-
 contract BerfChatStorage {
 
     // ONLY PUBLIC FOR TESTING
@@ -38,14 +36,12 @@ contract BerfChatStorage {
     /// @param _messageHash String that is the hash
     /// of the message contents (generated off-chain)
     function sendMessage(address _to, string memory _messageHash) public {
-        address _from = msg.sender;
-
-        if(_from > _to) {
-            chatId = hashAddresses(_from, _to);
+        if(msg.sender > _to) {
+            chatId = hashAddresses(msg.sender, _to);
         } else {
-            chatId = hashAddresses(_to, _from);
+            chatId = hashAddresses(_to, msg.sender);
         }
 
-        emit MessageSent(_from, _to, chatId, _messageHash, block.number);
+        emit MessageSent(msg.sender, _to, chatId, _messageHash, block.number);
     }
 }

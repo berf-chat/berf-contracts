@@ -7,6 +7,8 @@ import { BerfChatStorage } from "../typechain/BerfChatStorage";
 import EthCrypto from "eth-crypto";
 import { rejects } from "assert";
 
+// import { BigNumber } from "bignumber.js";
+
 // import expectRevert from "@openzeppelin/test-helpers";
 
 // import { toBuffer, unpadBuffer, privateToAddress, privateToPublic } from "ethereumjs-util";
@@ -229,7 +231,6 @@ describe("BerfChatStorage contract tests", async () => {
         // Confirm that acountTres CANNOT decrypt message
         await rejects(EthCrypto.decryptWithPrivateKey(accountTres.privateKey, encryptedObject));
     });
-    */
 
     it("tests sending a message via the contract", async () => {
         // Declare and assign variable
@@ -371,4 +372,19 @@ describe("BerfChatStorage contract tests", async () => {
         // what was declared earlier
         expect(decryptedResponsePayload.message).to.equal(secretResponse);
     })
+    */
+
+    it("throws an exception upon receiving ETH", async () => {
+        // Solidity documentation states that without
+        // neither a fallback() or receive(), sending
+        // any ETH will throw an exception
+        // (Contract can still receive ETH from a
+        // coinbase transaction or as a receipt
+        // of a `selfdestruct` destionation address
+        // however.)
+        await rejects(accountOne.sendTransaction({
+            to: berfChatStorage.address,
+            value: 100000
+        }));
+    });
 });
