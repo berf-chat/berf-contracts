@@ -25,29 +25,51 @@ const expect = chai.expect;
 
 describe("BerfChatStorage contract tests", async () => {
     
-    // Get BerfChatStorage to deploy
+    // Declare varible of type BerfChatStorage
     let berfChatStorage: BerfChatStorage;
 
-    // Pull array of Signers and
-    // assign to 'accounts'
+    // Pull array of Signers from
+    // ethers and assign to 'accounts'
     let accountOne: any;
     let accountTwo: any;
     let accountThree: any;
     let accountFour: any;
 
+    // Private keys provided from Hardhat
     const accountOnePrivKey: string = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
     const accountTwoPrivKey: string = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d";
+    const accountThreePrivKey: string = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a";
 
     // Generate public key from accountTwo private key
-    const accountTwoPubKey: string = EthCrypto.publicKeyByPrivateKey(
-        accountTwoPrivKey
-    );
+    let accountOnePubKey: string;
+    let accountTwoPubKey: string;
 
-    let decryptedPayload: any;
+    // Pulled a tx hash from etherscan
+    // to use as a test hash
+    const testMessageHash: string = "0xa6c0386e78a842666f1e98975f5124872c330638aa147f4b109d286720719fcd";
+
+    // Declaring the variables that will
+    // be used to test the functionality
+    // of EthCrypto
+    let secretMessage: string;
+    let signature: string;
     let payload: any;
+    let encrypted: any;
+    let encryptedString: string;
+    let encryptedObject: any;
+
+    let decrypted: string;
+    let decryptedPayload: any;
 
     let secretResponse: string;
+    let responseSignature: string;
+    let responsePayload: any;
+    let encryptedResponse: any;
     let encryptedResponseString: any;
+
+    let encryptedResponseObject: any;
+    let decryptedResponse: string;
+    let decryptedResponsePayload: any;
 
     before(async () => {
         // Get BerfChatStorage to deploy
@@ -61,7 +83,6 @@ describe("BerfChatStorage contract tests", async () => {
         berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
     });
 
-    /*
     it("confirms accountOne deployed BerfChatStorage contract", async () => {
         // Confirm the address that deployed
         // BerfChatStorage contract is firstAccount
@@ -71,8 +92,8 @@ describe("BerfChatStorage contract tests", async () => {
     it("confirms the order of the addresses hashed via hashAddresses() changes the output", async () => {
         // Hash addresses as two different
         // sequences of inputting as parameters
-        const firstHash = await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address);
-        const secondHash = await berfChatStorage.hashAddresses(accountTwo.address, accountOne.address);
+        const firstHash: any = await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address);
+        const secondHash: any = await berfChatStorage.hashAddresses(accountTwo.address, accountOne.address);
 
         // Compare the two different hashes
         // to confirm whether the order of
@@ -85,11 +106,11 @@ describe("BerfChatStorage contract tests", async () => {
         // to accountTwo and then one from accountTwo
         // to accountOne and confirm the function
         // call generates the same chatId for both instances
-        await berfChatStorage.sendMessage(accountTwo.address);
-        const chatIdOneToTwo = await berfChatStorage.chatId();
+        await berfChatStorage.sendMessage(accountTwo.address, testMessageHash);
+        const chatIdOneToTwo: any = await berfChatStorage.chatId();
 
-        await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address);
-        const chatIdTwoToOne = await berfChatStorage.chatId();
+        await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address, testMessageHash);
+        const chatIdTwoToOne: any = await berfChatStorage.chatId();
 
         expect(chatIdOneToTwo).to.equal(chatIdTwoToOne);
 
@@ -97,167 +118,65 @@ describe("BerfChatStorage contract tests", async () => {
         // to accountFour and compare to the
         // chat ids from accountOne to accountTwo
         // to verify they are different
-        await berfChatStorage.connect(accountThree).sendMessage(accountFour.address);
-        const chatIdThreeToFour = await berfChatStorage.chatId();
+        await berfChatStorage.connect(accountThree).sendMessage(accountFour.address, testMessageHash);
+        const chatIdThreeToFour: any = await berfChatStorage.chatId();
 
         expect(chatIdOneToTwo).to.not.equal(chatIdThreeToFour);
-    })
+    });
 
     it("tests the functionality of sendMessage", async () => {
         // Confirm the sendMessage function emitted
         // the MessageSent event
         // Note: currently have to hardcode the Hardhat
-        // Network block number (parameter number 4)
-        await expect(berfChatStorage.sendMessage(accountTwo.address))
+        // Network block number (parameter number 5)
+        await expect(berfChatStorage.sendMessage(accountTwo.address, testMessageHash))
         .to.emit(berfChatStorage, 'MessageSent')
         .withArgs(
             accountOne.address,
             accountTwo.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
-            2 //Currently hard coding the HRE block number
+            testMessageHash,
+            5 //Currently hard coding the HRE block number
         );
-    })
-    
-
-    it("tests sending message hashes using EthCrypto", async () => {
-        // Create new accounts
-        // (Used the EthCrypto library to create accounts
-        // rather than using Hardhat because for testing
-        // purposes, it is much easier to retrieve 
-        // public keys with it.)
-        const accountUno = EthCrypto.createIdentity();
-        const accountDos = EthCrypto.createIdentity();
-
-        // Declare and assign variable
-        // with secret string.
-        const secretMessage = "Hey, how are you?";
-
-        // Sign the message with accountUno's
-        // private key
-        const signature = EthCrypto.sign(
-            accountUno.privateKey,
-            EthCrypto.hash.keccak256(secretMessage)
-        );
-
-        // Create object with message and signature
-        const payload = {
-            message: secretMessage,
-            signature
-        };
-
-        // Encrypt the message and the signature with
-        // accountDos' publicKey. (By encrypting it
-        // with accountDos' public key, only accountDos
-        // can decrypt `payload` with his private key.)
-        const encrypted = await EthCrypto.encryptWithPublicKey(
-            accountDos.publicKey,
-            JSON.stringify(payload) // Stringify the payload to allow encryption
-        );
-
-        // Convert object into smaller string-representation
-        const encryptedString = EthCrypto.cipher.stringify(encrypted);
-
-
-        // ~~~~ SENDING MESSAGE FROM accountUno TO accountDos ~~~ //
-
-
-        // Parse the string back to an object
-        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
-
-        const decrypted = await EthCrypto.decryptWithPrivateKey(
-            accountDos.privateKey,
-            encryptedObject
-        );
-
-        const decryptedPayload = JSON.parse(decrypted);
-
-        // Check signature
-        const senderAddress = EthCrypto.recover(
-            decryptedPayload.signature,
-            EthCrypto.hash.keccak256(decryptedPayload.message)
-        );
-
-        expect(senderAddress).to.equal(accountUno.address);
-
-        expect(decryptedPayload.message).to.equal(secretMessage);
-    })
-
-    it("confirms that only the public key's private key can decrypt the message", async () => {
-        // Create new accounts
-        // (Used the EthCrypto library to create accounts
-        // rather than using Hardhat because for testing
-        // purposes, it is much easier to retrieve 
-        // public keys with it.)
-        const accountUno = EthCrypto.createIdentity();
-        const accountDos = EthCrypto.createIdentity();
-        const accountTres = EthCrypto.createIdentity();
-
-        // Declare and assign variable
-        // with secret string.
-        const secretMessage = "I know who Satoshi is.";
-
-        // Sign the message with accountUno's
-        // private key
-        const signature = EthCrypto.sign(
-            accountUno.privateKey,
-            EthCrypto.hash.keccak256(secretMessage)
-        );
-
-        // Create object with message and signature
-        const payload = {
-            message: secretMessage,
-            signature
-        };
-
-        // Encrypt the message and the signature with
-        // accountDos' publicKey. (By encrypting it
-        // with accountDos' public key, only accountDos
-        // can decrypt `payload` with its private key.)
-        const encrypted = await EthCrypto.encryptWithPublicKey(
-            accountDos.publicKey,
-            JSON.stringify(payload) // Stringify the payload to allow encryption
-        );
-
-        // Convert object into smaller string-representation
-        const encryptedString = EthCrypto.cipher.stringify(encrypted);
-
-
-        // ~~~~ SENDING MESSAGE FROM accountOne TO accountTwo ~~~ //
-
-
-        // Parse the string back to an object
-        const encryptedObject = EthCrypto.cipher.parse(encryptedString);
-
-        // Confirm that acountTres CANNOT decrypt message
-        await rejects(EthCrypto.decryptWithPrivateKey(accountTres.privateKey, encryptedObject));
     });
 
     it("tests sending a message via the contract", async () => {
         // Declare and assign variable
         // with secret string.
-        const secretMessage: string = "Satoshi is not Vitalik.";
+        secretMessage = "Satoshi is not Vitalik.";
 
-        const signature: string = EthCrypto.sign(
+        // Sign the message with accountOne's
+        // private key
+        signature = EthCrypto.sign(
             accountOnePrivKey,
             EthCrypto.hash.keccak256(secretMessage)
         );
 
-        
         // Create object with message and signature
         payload = {
             message: secretMessage,
             signature
         };
-        
-        // NOT SURE WHICH TYPE TO MAKE THIS
-        const encrypted: any = await EthCrypto.encryptWithPublicKey(
+
+        // Generate public key from accountTwo private key
+        accountTwoPubKey = EthCrypto.publicKeyByPrivateKey(
+            accountTwoPrivKey
+        );
+
+        // Encrypt the message and the signature with
+        // accountTwo' publicKey. (By encrypting it
+        // with accountTwo' public key, only accountTwo
+        // can decrypt `payload` with its private key.)
+        encrypted = await EthCrypto.encryptWithPublicKey(
             accountTwoPubKey,
-            JSON.stringify(payload)
+            JSON.stringify(payload) // Stringify the payload to allow encryption
         );
 
         // Convert object into smaller string-representation
-        // (This variable of type string)
-        const encryptedString: string = EthCrypto.cipher.stringify(encrypted);
+        encryptedString  = EthCrypto.cipher.stringify(encrypted);
+
+        // Parse the string back to an object
+        encryptedObject = EthCrypto.cipher.parse(encryptedString);
 
         // Confirm the sendMessage function emitted
         // the MessageSent event
@@ -270,15 +189,12 @@ describe("BerfChatStorage contract tests", async () => {
             accountTwo.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             encryptedString,
-            2 //Currently hard coding the HRE block number
+            6 //Currently hard coding the HRE block number
         );
 
-        // Parse the string back to an object
-        const encryptedObject: any = EthCrypto.cipher.parse(encryptedString);
-        
         // Decrypt the received message with the
         // private key of the recipient, accountTwo
-        const decrypted: string = await EthCrypto.decryptWithPrivateKey(
+        decrypted = await EthCrypto.decryptWithPrivateKey(
             accountTwoPrivKey,
             encryptedObject
         );
@@ -297,32 +213,32 @@ describe("BerfChatStorage contract tests", async () => {
         // Confirm the decrypted message is
         // what was declared earlier
         expect(decryptedPayload.message).to.equal(secretMessage);
-    })
+    });
 
     it("tests responding to a message via the contract", async () => {
         // Declare and assign variable
         // with secret string.
         secretResponse = "Now I know Vitalik is not Satoshi.";
 
-        const responseSignature: string = EthCrypto.sign(
+        responseSignature = EthCrypto.sign(
             accountTwoPrivKey,
             EthCrypto.hash.keccak256(secretResponse)
         );
 
         // Create object with message and signature
-        const responsePayload: any = {
+        responsePayload = {
             message: secretResponse,
             signature: responseSignature
         };
 
         // Recover accountOnePubKey from
         // previously sent message
-        const accountOnePubKey: string = EthCrypto.recoverPublicKey(
+        accountOnePubKey = EthCrypto.recoverPublicKey(
             decryptedPayload.signature,
             EthCrypto.hash.keccak256(payload.message)
         );
 
-        const encryptedResponse: any = await EthCrypto.encryptWithPublicKey(
+        encryptedResponse = await EthCrypto.encryptWithPublicKey(
             accountOnePubKey,
             JSON.stringify(responsePayload)
         );
@@ -342,22 +258,27 @@ describe("BerfChatStorage contract tests", async () => {
             accountOne.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             encryptedResponseString,
-            3 //Currently hard coding the HRE block number
+            7 //Currently hard coding the HRE block number
         );
-    })
+    });
 
+    it("confirms that only the public key's private key can decrypt the message", async () => {
+        // Confirm that acountTres CANNOT decrypt message
+        await rejects(EthCrypto.decryptWithPrivateKey(accountThreePrivKey, encryptedObject));
+    });
+    
     it("decrypts the response message", async () => {
         // Parse the string back to an object
-        const encryptedResponseObject: any = EthCrypto.cipher.parse(encryptedResponseString);
+        encryptedResponseObject = EthCrypto.cipher.parse(encryptedResponseString);
         
         // Decrypt the received message with the
         // private key of the recipient, accountOne
-        const decryptedResponse: string = await EthCrypto.decryptWithPrivateKey(
+        decryptedResponse = await EthCrypto.decryptWithPrivateKey(
             accountOnePrivKey,
             encryptedResponseObject
         );
 
-        const decryptedResponsePayload: any = JSON.parse(decryptedResponse);
+        decryptedResponsePayload = JSON.parse(decryptedResponse);
 
         // Check signature
         const responseSenderAddress: string = EthCrypto.recover(
@@ -371,8 +292,7 @@ describe("BerfChatStorage contract tests", async () => {
         // Confirm the decrypted message is
         // what was declared earlier
         expect(decryptedResponsePayload.message).to.equal(secretResponse);
-    })
-    */
+    });
 
     it("throws an exception upon receiving ETH", async () => {
         // Solidity documentation states that without
