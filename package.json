@@ -38,6 +38,7 @@
   "dependencies": {
     "bignumber.js": "^9.0.1",
     "chai-as-promised": "^7.1.1",
+    "dotenv": "^10.0.0",
     "eth-crypto": "^2.0.0",
     "ethereum-private-key-to-public-key": "0.0.5",
     "ethereumjs-util": "^7.1.0",
