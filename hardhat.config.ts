@@ -18,7 +18,11 @@ const config: HardhatUserConfig = {
     ropsten: {
       url: `https://ropsten.infura.io/v3/${infuraApiKey}`,
       accounts: [`0x${accountOnePrivKey}`, `0x${accountTwoPrivKey}`]
-    }
+    },
+    optimistic: {
+      url: 'https://kovan.optimism.io/',
+      accounts: [`0x${accountOnePrivKey}`, `0x${accountTwoPrivKey}`]
+    },
   },
   solidity: {
     compilers: [{ version: "0.8.4", settings: {} }],
