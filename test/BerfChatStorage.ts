@@ -70,18 +70,22 @@ describe("BerfChatStorage contract tests", async function() {
 
         // Pull array of Signers and
         // assign to 'accounts'
-        [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
+        // [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
+        [accountOne, accountTwo] = await ethers.getSigners();
 
         // Deploy berfChatStorage from first account
         berfChatStorage = (await BerfChatStorage.deploy()) as BerfChatStorage;
-    });
 
+        await berfChatStorage.deployed();
+    });
+    
     it("confirms accountOne deployed BerfChatStorage contract", async () => {
         // Confirm the address that deployed
         // BerfChatStorage contract is firstAccount
         expect(await berfChatStorage.deployTransaction.from).to.equal(accountOne.address);
     });
     
+    /*
     it("confirms the order of the addresses hashed via hashAddresses() changes the output", async () => {
         // Hash addresses as two different
         // sequences of inputting as parameters
@@ -300,9 +304,10 @@ describe("BerfChatStorage contract tests", async function() {
             value: 100000
         }));
     });
-    
+    */
 });
 
+/*
 describe("BerfChatStorage contract tests on Ropsten", async function() {
     // Increase the allowed
     // time for a test to run
@@ -437,3 +442,4 @@ describe("BerfChatStorage contract tests on Ropsten", async function() {
         }
     })
 });
+*/

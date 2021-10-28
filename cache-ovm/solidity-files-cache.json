@@ -1,0 +1,37 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/robertocantu/blockchain_programming/berf-chat/berf-contracts/contracts/BerfChatStorage.sol": {
+      "lastModificationDate": 1635463405787,
+      "contentHash": "8916ce059c817157d2062620a0854041",
+      "sourceName": "contracts/BerfChatStorage.sol",
+      "solcConfig": {
+        "version": "0.8.4",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.4"
+      ],
+      "artifacts": []
+    }
+  }
+}

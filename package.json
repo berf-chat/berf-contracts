@@ -35,6 +35,7 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
+    "@eth-optimism/hardhat-ovm": "^0.2.3",
     "chai-as-promised": "^7.1.1",
     "dotenv": "^10.0.0",
     "eth-crypto": "^2.0.0"
