@@ -71,7 +71,7 @@ describe("BerfChatStorage contract tests", async function() {
         // Pull array of Signers and
         // assign to 'accounts'
         // [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
-        [accountOne, accountTwo] = await ethers.getSigners();
+        [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
 
         // Deploy berfChatStorage from first account
         berfChatStorage = (await BerfChatStorage.deploy()) as BerfChatStorage;
@@ -132,7 +132,7 @@ describe("BerfChatStorage contract tests", async function() {
             accountTwo.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             testMessageHash,
-            5 //Currently hard coding the HRE block number
+            (await ethers.provider.getBlock("latest")).number
         );
     });
 
@@ -185,7 +185,7 @@ describe("BerfChatStorage contract tests", async function() {
             accountTwo.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             encryptedString,
-            6 //Currently hard coding the HRE block number
+            (await ethers.provider.getBlock("latest")).number
         );
 
         // Decrypt the received message with the
@@ -254,7 +254,7 @@ describe("BerfChatStorage contract tests", async function() {
             accountOne.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             encryptedResponseString,
-            7 //Currently hard coding the HRE block number
+            (await ethers.provider.getBlock("latest")).number
         );
     });
 

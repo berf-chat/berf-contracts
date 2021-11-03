@@ -13,6 +13,8 @@ dotenv.config({ path: './.env' });
 const infuraApiKey = process.env.INFURA_ETHEREUM;
 const accountOnePrivKey = process.env.ACCOUNT_ONE_PRIVATE_KEY;
 const accountTwoPrivKey = process.env.ACCOUNT_TWO_PRIVATE_KEY;
+const accountThreePrivKey = process.env.ACCOUNT_THREE_PRIVATE_KEY;
+const accountFourPrivKey = process.env.ACCOUNT_FOUR_PRIVATE_KEY;
 
 
 const config: HardhatUserConfig = {
@@ -22,11 +24,11 @@ const config: HardhatUserConfig = {
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${infuraApiKey}`,
-      accounts: [`0x${accountOnePrivKey}`, `0x${accountTwoPrivKey}`]
+      accounts: [`0x${accountOnePrivKey}`, `0x${accountTwoPrivKey}`, `0x${accountThreePrivKey}`, `0x${accountFourPrivKey}`]
     },
     optimistic: {
       url: 'https://kovan.optimism.io',
-      accounts: [`0x${accountOnePrivKey}`, `0x${accountTwoPrivKey}`] /*,
+      accounts: [`0x${accountOnePrivKey}`, `0x${accountTwoPrivKey}`, `0x${accountThreePrivKey}`, `0x${accountFourPrivKey}`] /*,
       gasPrice: 15000000, // required
       ovm: true // required
       */
