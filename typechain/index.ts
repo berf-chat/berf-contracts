@@ -2,7 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { BerfChat } from "./BerfChat";
-export type { BerfChatStorage } from "./BerfChatStorage";
 
 export { BerfChat__factory } from "./factories/BerfChat__factory";
-export { BerfChatStorage__factory } from "./factories/BerfChatStorage__factory";

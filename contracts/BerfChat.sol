@@ -32,15 +32,20 @@ contract BerfChat {
     /// @param _to Address of the message recipient.
     /// @param _messageHash String that is the hash
     /// of the message contents (generated off-chain)
-    function sendMessage(address _to, string memory _messageHash) external {
+    /// @return boolean of whether the addresses
+    /// were successfully hashed.
+    function sendMessage(address _to, string memory _messageHash) external returns(bool) {
         bytes32 _chatId;
 
         if(msg.sender > _to) {
             _chatId = hashAddresses(msg.sender, _to);
-        } else {
+        } else if (msg.sender < _to) {
             _chatId = hashAddresses(_to, msg.sender);
+        } else {
+            return false;
         }
 
         emit MessageSent(msg.sender, _to, _chatId, _messageHash, block.number);
+        return true;
     }
 }

@@ -103,7 +103,7 @@ export class BerfChat extends BaseContract {
       _to: string,
       _messageHash: string,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<boolean>;
   };
 
   filters: {
