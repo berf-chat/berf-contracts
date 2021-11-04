@@ -7,15 +7,8 @@ import { BerfChatStorage } from "../typechain/BerfChatStorage";
 import EthCrypto from "eth-crypto";
 import { rejects } from "assert";
 
-// import { BigNumber } from "bignumber.js";
-
-// import expectRevert from "@openzeppelin/test-helpers";
-
-// import { toBuffer, unpadBuffer, privateToAddress, privateToPublic } from "ethereumjs-util";
-// import getPublicKeyString from "ethereumjs-wallet";
-// import Wallet from "ethereumjs-wallet";
-
-// import privateKeyToPublicKey from "ethereum-private-key-to-public-key";
+import * as dotenv from "dotenv";
+dotenv.config({ path: '../.env' });
 
 chai.use(solidity);
 chai.use(chaiAsPromised);
@@ -23,7 +16,7 @@ chai.use(chaiAsPromised);
 // const { expect } = chai;
 const expect = chai.expect;
 
-describe("BerfChatStorage contract tests", async () => {
+describe("BerfChatStorage contract tests", async function() {
     
     // Declare varible of type BerfChatStorage
     let berfChatStorage: BerfChatStorage;
@@ -73,14 +66,14 @@ describe("BerfChatStorage contract tests", async () => {
 
     before(async () => {
         // Get BerfChatStorage to deploy
-        const berfChatStorageFactory = await ethers.getContractFactory("BerfChatStorage");
+        const BerfChatStorage = await ethers.getContractFactory("BerfChatStorage");
 
         // Pull array of Signers and
         // assign to 'accounts'
         [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
 
         // Deploy berfChatStorage from first account
-        berfChatStorage = (await berfChatStorageFactory.deploy()) as BerfChatStorage;
+        berfChatStorage = (await BerfChatStorage.deploy()) as BerfChatStorage;
     });
 
     it("confirms accountOne deployed BerfChatStorage contract", async () => {
@@ -307,4 +300,140 @@ describe("BerfChatStorage contract tests", async () => {
             value: 100000
         }));
     });
+    
+});
+
+describe("BerfChatStorage contract tests on Ropsten", async function() {
+    // Increase the allowed
+    // time for a test to run
+    this.timeout(1200000);
+
+    // Declare varible of type BerfChatStorage
+    let berfChatStorage: BerfChatStorage;
+
+    // Declare two accounts
+    let accountOne: any;
+    let accountTwo: any;
+
+    // AccountOne and AccountTwo
+    // private keys from Ropsten network
+    const accountOneRopstenPrivKey: any = process.env.ACCOUNT_ONE_PRIVATE_KEY;
+    const accountTwoRopstenPrivKey: any = process.env.ACCOUNT_TWO_PRIVATE_KEY;
+
+    // Generate public key from accountTwo private key
+    let accountOnePubKey: string;
+    let accountTwoPubKey: string;
+
+    let secretMessages: string[];
+    let signature: string;
+    let payload: any;
+    let encrypted: any;
+    let encryptedString: string;
+
+    before(async () => {
+        // Get BerfChatStorage contract
+        const BerfChatStorage = await ethers.getContractFactory("BerfChatStorage");
+
+        // Pull array of Signers and
+        // assign to 'accounts'
+        [accountOne, accountTwo] = await ethers.getSigners();
+
+        // Pull up existing instace of BerfChatStorage
+        // Ropsten testnet
+        berfChatStorage = (await BerfChatStorage.attach("0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4")) as BerfChatStorage;
+    });
+
+    it("sends several back and forth messages from accountOne and accountTwo on the Ropsten testnet", async () => {
+        // Declare and assign an array
+        // with strings making up
+        // a conversation
+        secretMessages = [
+            "Hey",
+            "Hey, what's going on?",
+            "Nothing much. What about you?",
+            "Same, just browsing NFTs on OpenSea.",
+            "Oh Cool. Any in particular that you're looking at buying?",
+            "I wish I had funds for a CryptoPunk. Might get a Meebit though.",
+            "Yeah, a Punk would be cool. And nice, a Meebit! I may get a CoolCat myself.",
+            "You should get a MoonCat while you're at it. Be a collector.",
+            "Haha. I don't like cats THAT much.",
+            "I feel you there."
+        ];
+
+        // For loop to iterate through array
+        // of messages
+        for(let i = 0; i < secretMessages.length; i++) {
+
+            // If statement that divides the messages
+            // by odds and evens, and sends them from
+            // accountOne to accountTwo, or vice versa
+            if(i % 2 == 0) {
+                // Sign the message with accountOne's
+                // private key
+                signature = EthCrypto.sign(
+                    `0x${accountOneRopstenPrivKey}`,
+                    EthCrypto.hash.keccak256(secretMessages[i])
+                );
+
+                // Create object with message and signature
+                payload = {
+                    message: secretMessages[i],
+                    signature
+                };
+
+                // Generate public key from accountTwo private key
+                accountTwoPubKey = EthCrypto.publicKeyByPrivateKey(
+                    `0x${accountTwoRopstenPrivKey}`
+                );
+
+                // Encrypt the message and the signature with
+                // accountTwo' publicKey.
+                encrypted = await EthCrypto.encryptWithPublicKey(
+                    accountTwoPubKey,
+                    JSON.stringify(payload) // Stringify the payload to allow encryption
+                );
+
+                // Convert object into smaller string-representation
+                encryptedString  = EthCrypto.cipher.stringify(encrypted);
+
+                // Send message from accountOne to accountTwo
+                // Transactions on Etherscan can be viewed here:
+                // https://ropsten.etherscan.io/address/0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4
+                await berfChatStorage.sendMessage(accountTwo.address, encryptedString);
+            } else {
+                // Sign the message with accountTwo's
+                // private key
+                signature = EthCrypto.sign(
+                    `0x${accountTwoRopstenPrivKey}`,
+                    EthCrypto.hash.keccak256(secretMessages[i])
+                );
+
+                // Create object with message and signature
+                payload = {
+                    message: secretMessages[i],
+                    signature
+                };
+
+                // Generate public key from accountOne private key
+                accountOnePubKey = EthCrypto.publicKeyByPrivateKey(
+                    `0x${accountOneRopstenPrivKey}`
+                );
+
+                // Encrypt the message and the signature with
+                // accountOne's publicKey.
+                encrypted = await EthCrypto.encryptWithPublicKey(
+                    accountOnePubKey,
+                    JSON.stringify(payload) // Stringify the payload to allow encryption
+                );
+
+                // Convert object into smaller string-representation
+                encryptedString  = EthCrypto.cipher.stringify(encrypted);
+
+                // Send message from accountTwo to accountOne
+                // Transactions on Etherscan can be viewed here:
+                // https://ropsten.etherscan.io/address/0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4
+                await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address, encryptedString);
+            }
+        }
+    })
 });
