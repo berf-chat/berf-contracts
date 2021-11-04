@@ -2,10 +2,10 @@ import { ethers } from "hardhat";
 
 async function main() {
   // We get the contract to deploy
-  const BerfChatStorage = await ethers.getContractFactory("BerfChatStorage");
-  const berfChatStorage = await BerfChatStorage.deploy();
+  const BerfChat = await ethers.getContractFactory("BerfChat");
+  const berfChat = await BerfChat.deploy();
 
-  console.log("Berf Chat contract deployed to:", berfChatStorage.address);
+  console.log("BerfChat contract deployed to:", berfChat.address);
 }
 
 main()

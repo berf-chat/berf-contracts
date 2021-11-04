@@ -3,7 +3,7 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { solidity } from "ethereum-waffle";
 import { Signer } from "ethers";
-import { BerfChatStorage } from "../typechain/BerfChatStorage";
+import { BerfChat } from "../typechain/BerfChat";
 import EthCrypto from "eth-crypto";
 import { rejects } from "assert";
 
@@ -16,10 +16,10 @@ chai.use(chaiAsPromised);
 // const { expect } = chai;
 const expect = chai.expect;
 
-describe("BerfChatStorage contract tests", async function() {
+describe("BerfChat contract tests", async function() {
     
-    // Declare varible of type BerfChatStorage
-    let berfChatStorage: BerfChatStorage;
+    // Declare varible of type BerfChat
+    let berfChat: BerfChat;
 
     // Pull array of Signers from
     // ethers and assign to 'accounts'
@@ -65,8 +65,8 @@ describe("BerfChatStorage contract tests", async function() {
     let decryptedResponsePayload: any;
 
     before(async () => {
-        // Get BerfChatStorage to deploy
-        const BerfChatStorage = await ethers.getContractFactory("BerfChatStorage");
+        // Get BerfChat to deploy
+        const BerfChat = await ethers.getContractFactory("BerfChat");
 
         // Pull array of Signers and
         // assign to 'accounts'
@@ -74,25 +74,25 @@ describe("BerfChatStorage contract tests", async function() {
         [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
 
         // Deploy berfChatStorage from first account
-        berfChatStorage = (await BerfChatStorage.deploy()) as BerfChatStorage;
+        berfChat = (await BerfChat.deploy()) as BerfChat;
 
-        await berfChatStorage.deployed();
+        await berfChat.deployed();
     });
     
-    it("confirms accountOne deployed BerfChatStorage contract", async () => {
+    it("confirms accountOne deployed BerfChat contract", async () => {
         // Confirm the address that deployed
         // BerfChatStorage contract is firstAccount
         expect(await berfChatStorage.deployTransaction.from).to.equal(accountOne.address);
     });
     
+    /*
     // Test required private hashAddresses function to have its
     // visibility changed to `public` to test
-    /*
     it("confirms the order of the addresses hashed via hashAddresses() changes the output", async () => {
         // Hash addresses as two different
         // sequences of inputting as parameters
-        const firstHash: any = await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address);
-        const secondHash: any = await berfChatStorage.hashAddresses(accountTwo.address, accountOne.address);
+        const firstHash: any = await berfChat.hashAddresses(accountOne.address, accountTwo.address);
+        const secondHash: any = await berfChat.hashAddresses(accountTwo.address, accountOne.address);
 
         // Compare the two different hashes
         // to confirm whether the order of
@@ -107,11 +107,11 @@ describe("BerfChatStorage contract tests", async function() {
         // to accountTwo and then one from accountTwo
         // to accountOne and confirm the function
         // call generates the same chatId for both instances
-        await berfChatStorage.sendMessage(accountTwo.address, testMessageHash);
-        const chatIdOneToTwo: any = await berfChatStorage.chatId();
+        await berfChat.sendMessage(accountTwo.address, testMessageHash);
+        const chatIdOneToTwo: any = await berfChat.chatId();
 
-        await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address, testMessageHash);
-        const chatIdTwoToOne: any = await berfChatStorage.chatId();
+        await berfChat.connect(accountTwo).sendMessage(accountOne.address, testMessageHash);
+        const chatIdTwoToOne: any = await berfChat.chatId();
 
         expect(chatIdOneToTwo).to.equal(chatIdTwoToOne);
 
@@ -119,8 +119,8 @@ describe("BerfChatStorage contract tests", async function() {
         // to accountFour and compare to the
         // chat ids from accountOne to accountTwo
         // to verify they are different
-        await berfChatStorage.connect(accountThree).sendMessage(accountFour.address, testMessageHash);
-        const chatIdThreeToFour: any = await berfChatStorage.chatId();
+        await berfChat.connect(accountThree).sendMessage(accountFour.address, testMessageHash);
+        const chatIdThreeToFour: any = await berfChat.chatId();
 
         expect(chatIdOneToTwo).to.not.equal(chatIdThreeToFour);
     });
@@ -131,12 +131,12 @@ describe("BerfChatStorage contract tests", async function() {
     it("tests the functionality of sendMessage", async () => {
         // Confirm the sendMessage function emitted
         // the MessageSent event
-        await expect(berfChatStorage.sendMessage(accountTwo.address, testMessageHash))
-        .to.emit(berfChatStorage, 'MessageSent')
+        await expect(berfChat.sendMessage(accountTwo.address, testMessageHash))
+        .to.emit(berfChat, 'MessageSent')
         .withArgs(
             accountOne.address,
             accountTwo.address,
-            (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
+            (await berfChat.hashAddresses(accountOne.address, accountTwo.address)),
             testMessageHash,
             (await ethers.provider.getBlock("latest")).number
         );
@@ -316,20 +316,20 @@ describe("BerfChatStorage contract tests", async function() {
         // of a `selfdestruct` destionation address
         // however.)
         await rejects(accountOne.sendTransaction({
-            to: berfChatStorage.address,
+            to: berfChat.address,
             value: 100000
         }));
     });
 });
 
-/*
-describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async function() {
+
+describe("BerfChat contract tests on Ropsten or Optimistic Kovan", async function() {
     // Increase the allowed
     // time for a test to run
     this.timeout(1200000);
 
     // Declare varible of type BerfChatStorage
-    let berfChatStorage: BerfChatStorage;
+    let berfChat: BerfChat;
 
     // Declare two accounts
     let accountOne: any;
@@ -351,20 +351,20 @@ describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async 
     let encryptedString: string;
 
     before(async () => {
-        // Get BerfChatStorage contract
-        const BerfChatStorage = await ethers.getContractFactory("BerfChatStorage");
+        // Get BerfChat contract
+        const BerfChat = await ethers.getContractFactory("BerfChat");
 
         // Pull array of Signers and
         // assign to 'accounts'
         [accountOne, accountTwo] = await ethers.getSigners();
 
-        // Pull up existing instace of BerfChatStorage
+        // Pull up existing instace of BerfChat
         // Ropsten testnet
         // berfChatStorage = (await BerfChatStorage.attach("0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4")) as BerfChatStorage;
 
         // Pull up existing instace of BerfChatStorage
         // Optimistic Kovan testnet
-        berfChatStorage = (await BerfChatStorage.attach("0x239eF3B9093fA5fF22a3856aa4bF75EB62072dfA")) as BerfChatStorage;
+        berfChat = (await BerfChat.attach("0x239eF3B9093fA5fF22a3856aa4bF75EB62072dfA")) as BerfChat;
     });
 
     it("sends several back and forth messages from accountOne and accountTwo on the Ropsten testnet", async () => {
@@ -425,7 +425,7 @@ describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async 
                 // https://ropsten.etherscan.io/address/0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4
                 // Transactions on Optimistic Kovan Etherscan can be viewed here:
                 // https://kovan-optimistic.etherscan.io/address/0x239ef3b9093fa5ff22a3856aa4bf75eb62072dfa
-                await berfChatStorage.sendMessage(accountTwo.address, encryptedString);
+                await berfChat.sendMessage(accountTwo.address, encryptedString);
             } else {
                 // Sign the message with accountTwo's
                 // private key
@@ -460,9 +460,8 @@ describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async 
                 // https://ropsten.etherscan.io/address/0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4
                 // Transactions on Optimistic Kovan Etherscan can be viewed here:
                 // https://kovan-optimistic.etherscan.io/address/0x239ef3b9093fa5ff22a3856aa4bf75eb62072dfa
-                await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address, encryptedString);
+                await berfChat.connect(accountTwo).sendMessage(accountOne.address, encryptedString);
             }
         }
     })
 });
-*/

@@ -13,6 +13,10 @@ import * as Contracts from ".";
 declare module "hardhat/types/runtime" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
     getContractFactory(
+      name: "BerfChat",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BerfChat__factory>;
+    getContractFactory(
       name: "BerfChatStorage",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BerfChatStorage__factory>;
