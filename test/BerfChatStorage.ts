@@ -85,6 +85,9 @@ describe("BerfChatStorage contract tests", async function() {
         expect(await berfChatStorage.deployTransaction.from).to.equal(accountOne.address);
     });
     
+    // Test required private hashAddresses function to have its
+    // visibility changed to `public` to test
+    /*
     it("confirms the order of the addresses hashed via hashAddresses() changes the output", async () => {
         // Hash addresses as two different
         // sequences of inputting as parameters
@@ -97,6 +100,8 @@ describe("BerfChatStorage contract tests", async function() {
         expect(firstHash).to.not.equal(secondHash);
     });
 
+    // Test required the private chatId variable to have its
+    // visibility changed to `public` to test
     it("compares the generated chatId from sendMessage() from different msg.senders", async () => {
         // Send two messages, one from accountOne
         // to accountTwo and then one from accountTwo
@@ -120,11 +125,12 @@ describe("BerfChatStorage contract tests", async function() {
         expect(chatIdOneToTwo).to.not.equal(chatIdThreeToFour);
     });
 
+    // Test required the visibility of `hashMessages`
+    // to be public to re-generate the chatId to
+    // compare the output of emitting MessageSent
     it("tests the functionality of sendMessage", async () => {
         // Confirm the sendMessage function emitted
         // the MessageSent event
-        // Note: currently have to hardcode the Hardhat
-        // Network block number (parameter number 5)
         await expect(berfChatStorage.sendMessage(accountTwo.address, testMessageHash))
         .to.emit(berfChatStorage, 'MessageSent')
         .withArgs(
@@ -135,6 +141,7 @@ describe("BerfChatStorage contract tests", async function() {
             (await ethers.provider.getBlock("latest")).number
         );
     });
+    */
 
     it("tests sending a message via the contract", async () => {
         // Declare and assign variable
@@ -174,10 +181,13 @@ describe("BerfChatStorage contract tests", async function() {
         // Parse the string back to an object
         encryptedObject = EthCrypto.cipher.parse(encryptedString);
 
+        /*
+        // NOTE: This check required `hashMessages` to be a public
+        // function to re-generate the `chatId` to compare to
+        // the argument from emitting MessageSent
+        //
         // Confirm the sendMessage function emitted
         // the MessageSent event
-        // Note: currently have to hardcode the Hardhat
-        // Network block number (parameter number 4)
         await expect(berfChatStorage.sendMessage(accountTwo.address, encryptedString))
         .to.emit(berfChatStorage, 'MessageSent')
         .withArgs(
@@ -187,6 +197,7 @@ describe("BerfChatStorage contract tests", async function() {
             encryptedString,
             (await ethers.provider.getBlock("latest")).number
         );
+        */
 
         // Decrypt the received message with the
         // private key of the recipient, accountTwo
@@ -243,6 +254,11 @@ describe("BerfChatStorage contract tests", async function() {
         // (This variable of type string)
         encryptedResponseString = EthCrypto.cipher.stringify(encryptedResponse);
 
+        /*
+        // NOTE: This check required `hashMessages` to be a public
+        // function to re-generate the `chatId` to compare to
+        // the argument from emitting MessageSent
+        //
         // Confirm the sendMessage function emitted
         // the MessageSent event
         // Note: currently have to hardcode the Hardhat
@@ -256,6 +272,7 @@ describe("BerfChatStorage contract tests", async function() {
             encryptedResponseString,
             (await ethers.provider.getBlock("latest")).number
         );
+        */
     });
 
     it("confirms that only the public key's private key can decrypt the message", async () => {
@@ -305,6 +322,7 @@ describe("BerfChatStorage contract tests", async function() {
     });
 });
 
+/*
 describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async function() {
     // Increase the allowed
     // time for a test to run
@@ -447,3 +465,4 @@ describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async 
         }
     })
 });
+*/

@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.4;
+pragma solidity 0.8.4;
 
-contract BerfChatStorage {
-
-    // ONLY PUBLIC FOR TESTING
-    bytes32 public chatId;
+contract BerfChat {
 
     event MessageSent(address from, address to, bytes32 chatId, string messageHash, uint time);
 
@@ -16,7 +13,7 @@ contract BerfChatStorage {
     /// @param _addr02 Address representing chat participant.
     /// @return _addressHash Hash of the provided addresses.
     function hashAddresses(address _addr01, address _addr02)
-        public /*private PUBLIC ONLY FOR TESTING*/
+        private
         pure
         returns(bytes32)
     {
@@ -35,13 +32,15 @@ contract BerfChatStorage {
     /// @param _to Address of the message recipient.
     /// @param _messageHash String that is the hash
     /// of the message contents (generated off-chain)
-    function sendMessage(address _to, string memory _messageHash) public {
+    function sendMessage(address _to, string memory _messageHash) external {
+        bytes32 _chatId;
+
         if(msg.sender > _to) {
-            chatId = hashAddresses(msg.sender, _to);
+            _chatId = hashAddresses(msg.sender, _to);
         } else {
-            chatId = hashAddresses(_to, msg.sender);
+            _chatId = hashAddresses(_to, msg.sender);
         }
 
-        emit MessageSent(msg.sender, _to, chatId, _messageHash, block.number);
+        emit MessageSent(msg.sender, _to, _chatId, _messageHash, block.number);
     }
 }
