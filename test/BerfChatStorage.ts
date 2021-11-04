@@ -70,12 +70,15 @@ describe("BerfChatStorage contract tests", async function() {
 
         // Pull array of Signers and
         // assign to 'accounts'
+        // [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
         [accountOne, accountTwo, accountThree, accountFour] = await ethers.getSigners();
 
         // Deploy berfChatStorage from first account
         berfChatStorage = (await BerfChatStorage.deploy()) as BerfChatStorage;
-    });
 
+        await berfChatStorage.deployed();
+    });
+    
     it("confirms accountOne deployed BerfChatStorage contract", async () => {
         // Confirm the address that deployed
         // BerfChatStorage contract is firstAccount
@@ -129,7 +132,7 @@ describe("BerfChatStorage contract tests", async function() {
             accountTwo.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             testMessageHash,
-            5 //Currently hard coding the HRE block number
+            (await ethers.provider.getBlock("latest")).number
         );
     });
 
@@ -182,7 +185,7 @@ describe("BerfChatStorage contract tests", async function() {
             accountTwo.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             encryptedString,
-            6 //Currently hard coding the HRE block number
+            (await ethers.provider.getBlock("latest")).number
         );
 
         // Decrypt the received message with the
@@ -251,7 +254,7 @@ describe("BerfChatStorage contract tests", async function() {
             accountOne.address,
             (await berfChatStorage.hashAddresses(accountOne.address, accountTwo.address)),
             encryptedResponseString,
-            7 //Currently hard coding the HRE block number
+            (await ethers.provider.getBlock("latest")).number
         );
     });
 
@@ -300,10 +303,9 @@ describe("BerfChatStorage contract tests", async function() {
             value: 100000
         }));
     });
-    
 });
 
-describe("BerfChatStorage contract tests on Ropsten", async function() {
+describe("BerfChatStorage contract tests on Ropsten or Optimistic Kovan", async function() {
     // Increase the allowed
     // time for a test to run
     this.timeout(1200000);
@@ -340,7 +342,11 @@ describe("BerfChatStorage contract tests on Ropsten", async function() {
 
         // Pull up existing instace of BerfChatStorage
         // Ropsten testnet
-        berfChatStorage = (await BerfChatStorage.attach("0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4")) as BerfChatStorage;
+        // berfChatStorage = (await BerfChatStorage.attach("0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4")) as BerfChatStorage;
+
+        // Pull up existing instace of BerfChatStorage
+        // Optimistic Kovan testnet
+        berfChatStorage = (await BerfChatStorage.attach("0x239eF3B9093fA5fF22a3856aa4bF75EB62072dfA")) as BerfChatStorage;
     });
 
     it("sends several back and forth messages from accountOne and accountTwo on the Ropsten testnet", async () => {
@@ -397,8 +403,10 @@ describe("BerfChatStorage contract tests on Ropsten", async function() {
                 encryptedString  = EthCrypto.cipher.stringify(encrypted);
 
                 // Send message from accountOne to accountTwo
-                // Transactions on Etherscan can be viewed here:
+                // Transactions on Ropsten Etherscan can be viewed here:
                 // https://ropsten.etherscan.io/address/0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4
+                // Transactions on Optimistic Kovan Etherscan can be viewed here:
+                // https://kovan-optimistic.etherscan.io/address/0x239ef3b9093fa5ff22a3856aa4bf75eb62072dfa
                 await berfChatStorage.sendMessage(accountTwo.address, encryptedString);
             } else {
                 // Sign the message with accountTwo's
@@ -432,6 +440,8 @@ describe("BerfChatStorage contract tests on Ropsten", async function() {
                 // Send message from accountTwo to accountOne
                 // Transactions on Etherscan can be viewed here:
                 // https://ropsten.etherscan.io/address/0xA9465f88563FF1A4D62Fe50b3A79d104C71c4bB4
+                // Transactions on Optimistic Kovan Etherscan can be viewed here:
+                // https://kovan-optimistic.etherscan.io/address/0x239ef3b9093fa5ff22a3856aa4bf75eb62072dfa
                 await berfChatStorage.connect(accountTwo).sendMessage(accountOne.address, encryptedString);
             }
         }
