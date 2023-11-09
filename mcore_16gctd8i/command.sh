@@ -1,0 +1,1 @@
+/Users/robertocantu/blockchain_programming/berf-chat/berf-contracts/env/bin/manticore contracts/BerfChat.sol

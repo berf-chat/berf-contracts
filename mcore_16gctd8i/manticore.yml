@@ -1,0 +1,4 @@
+cli:
+  argv:
+  - contracts/BerfChat.sol
+  skip_reverts: true
