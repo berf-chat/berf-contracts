@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.4;
 
+// Contract for messaging
 contract BerfChat {
 
     event MessageSent(address from, address to, bytes32 chatId, string messageHash, uint time);
